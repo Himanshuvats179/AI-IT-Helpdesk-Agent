@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Local data / secrets
+backend/.env
+*.db
+*.db-wal
+*.db-shm
+backend/chroma_db/
+chroma_db/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

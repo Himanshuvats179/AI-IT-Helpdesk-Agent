@@ -1,0 +1,187 @@
+# Seed knowledge base. `content` is auto-derived from title/symptoms/steps.
+# `requires_tool` ties a step to a real tool so the agent can act, not just advise.
+
+- id: KB-0001
+  title: Reset a forgotten Active Directory password
+  category: password_reset
+  symptoms: ["forgot password", "can't log in", "password not working", "locked out of laptop"]
+  applies_to: ["Windows", "macOS", "corporate account"]
+  risk_level: medium
+  preconditions: ["Requester identity must be verified before resetting."]
+  required_tools: ["request_identity_verification", "reset_ad_password"]
+  steps:
+    - { text: "Confirm the affected account (defaults to the requester).", requires_tool: check_account_status }
+    - { text: "Verify the requester's identity with a one-time code sent out-of-band.", requires_tool: request_identity_verification }
+    - { text: "Reset the AD password; a temporary credential is sent to the registered factor.", requires_tool: reset_ad_password, destructive: false }
+    - { text: "Tell the user to sign in with the temporary credential and set a new password." }
+
+- id: KB-0002
+  title: Unlock a locked user account
+  category: account_lockout
+  symptoms: ["account locked", "too many login attempts", "account is locked", "lockout"]
+  applies_to: ["corporate account"]
+  risk_level: low
+  required_tools: ["check_account_status", "unlock_account"]
+  steps:
+    - { text: "Check the account status to confirm it is locked.", requires_tool: check_account_status }
+    - { text: "Unlock the account.", requires_tool: unlock_account }
+    - { text: "Advise the user to wait a minute, then sign in again." }
+
+- id: KB-0003
+  title: VPN will not connect (stale profile)
+  category: vpn
+  symptoms: ["vpn won't connect", "cannot connect to vpn", "vpn error", "vpn disconnects"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: low
+  required_tools: ["run_endpoint_diagnostic"]
+  steps:
+    - { text: "Run a VPN diagnostic to check client version, profile and gateway reachability.", requires_tool: run_endpoint_diagnostic }
+    - { text: "If the profile is stale, re-import the corporate VPN profile and reconnect." }
+    - { text: "Confirm the user can reach an internal resource after reconnecting." }
+
+- id: KB-0004
+  title: VPN client is not installed
+  category: vpn
+  symptoms: ["no vpn client", "vpn app missing", "need vpn installed"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: low
+  required_tools: ["install_software"]
+  steps:
+    - { text: "Confirm the VPN client is missing." }
+    - { text: "Install the approved VPN client (package 'vpn-client').", requires_tool: install_software }
+    - { text: "Have the user sign in to the VPN with their corporate credentials." }
+
+- id: KB-0005
+  title: Install approved software from the catalog
+  category: software_install
+  symptoms: ["install software", "need an app", "please install", "software request"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: low
+  required_tools: ["install_software"]
+  steps:
+    - { text: "Confirm the requested package is in the approved catalog (e.g. slack, zoom, chrome, office365)." }
+    - { text: "Install the package to the user's device (requires approval).", requires_tool: install_software }
+    - { text: "Confirm the install completed and the app launches." }
+
+- id: KB-0006
+  title: Request access to a shared resource or group
+  category: access_request
+  symptoms: ["need access", "request access", "can't access shared drive", "add me to group"]
+  applies_to: ["file shares", "groups", "applications"]
+  risk_level: medium
+  preconditions: ["Access grants require manager/owner approval."]
+  required_tools: ["grant_access_request"]
+  steps:
+    - { text: "Identify the exact resource/group the user needs." }
+    - { text: "Submit the access grant for human approval (Tier-0 resources are never automated).", requires_tool: grant_access_request }
+    - { text: "Notify the user once access is granted." }
+
+- id: KB-0007
+  title: Outlook is not syncing or sending mail
+  category: email
+  symptoms: ["outlook not syncing", "emails stuck", "cannot send email", "mailbox not updating"]
+  applies_to: ["Outlook", "Windows", "macOS"]
+  risk_level: safe
+  steps:
+    - { text: "Have the user restart Outlook and check the connection status (bottom-right)." }
+    - { text: "Toggle Work Offline off; verify network connectivity." }
+    - { text: "If still failing, recreate the Outlook profile from a clean state." }
+
+- id: KB-0008
+  title: Printer shows offline
+  category: printer
+  symptoms: ["printer offline", "can't print", "printer not responding", "print job stuck"]
+  applies_to: ["network printers"]
+  risk_level: safe
+  steps:
+    - { text: "Power-cycle the printer and confirm it has a network/IP address." }
+    - { text: "On the PC, clear the print queue and set the printer back to Ready (uncheck 'Use Printer Offline')." }
+    - { text: "Send a test page." }
+
+- id: KB-0009
+  title: Computer running slowly
+  category: performance
+  symptoms: ["slow computer", "laptop is slow", "high cpu", "everything is laggy"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: safe
+  required_tools: ["run_endpoint_diagnostic"]
+  steps:
+    - { text: "Run a general endpoint diagnostic (CPU, memory, pending reboot).", requires_tool: run_endpoint_diagnostic }
+    - { text: "If a reboot is pending, ask the user to restart." }
+    - { text: "Close heavy background apps and re-check." }
+
+- id: KB-0010
+  title: No internet / Wi-Fi connectivity
+  category: network
+  symptoms: ["no internet", "wifi not working", "can't connect to network", "no connectivity"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: safe
+  required_tools: ["run_endpoint_diagnostic"]
+  steps:
+    - { text: "Run a connectivity diagnostic (DNS, gateway latency, packet loss).", requires_tool: run_endpoint_diagnostic }
+    - { text: "If DNS fails, have the user forget/rejoin the Wi-Fi network." }
+    - { text: "Confirm the user can browse to an internal site." }
+
+- id: KB-0011
+  title: Password has expired
+  category: password_reset
+  symptoms: ["password expired", "must change password", "password expiry"]
+  applies_to: ["corporate account"]
+  risk_level: low
+  required_tools: ["check_account_status"]
+  steps:
+    - { text: "Check the account to confirm the password is expired.", requires_tool: check_account_status }
+    - { text: "Guide the user through Ctrl+Alt+Del > Change Password (or the macOS prompt)." }
+
+- id: KB-0012
+  title: Disk almost full
+  category: performance
+  symptoms: ["disk full", "low disk space", "no space left", "storage full"]
+  applies_to: ["Windows", "macOS"]
+  risk_level: safe
+  required_tools: ["run_endpoint_diagnostic"]
+  steps:
+    - { text: "Run a disk diagnostic to confirm free space.", requires_tool: run_endpoint_diagnostic }
+    - { text: "Have the user empty the Recycle Bin/Trash and clear Downloads/temp files." }
+    - { text: "Recommend OneDrive offloading for large local folders." }
+
+- id: KB-0013
+  title: Lost or replaced MFA device
+  category: mfa
+  symptoms: ["lost phone mfa", "new phone authenticator", "can't get mfa code", "reset mfa"]
+  applies_to: ["MFA", "authenticator"]
+  risk_level: high
+  preconditions: ["High-risk: requires strong identity verification by a human."]
+  steps:
+    - { text: "Do NOT auto-reset MFA. Escalate to the identity team for in-person/strong verification." }
+
+- id: KB-0014
+  title: Laptop will not power on
+  category: hardware_diag
+  symptoms: ["laptop won't turn on", "no power", "black screen", "won't boot"]
+  applies_to: ["laptops"]
+  risk_level: high
+  steps:
+    - { text: "Hardware fault is out of scope for automated remediation. Escalate to deskside support." }
+
+- id: KB-0015
+  title: Teams/Zoom audio or video not working
+  category: software_install
+  symptoms: ["no audio in teams", "camera not working", "zoom mic", "can't hear on call"]
+  applies_to: ["Teams", "Zoom", "Windows", "macOS"]
+  risk_level: safe
+  steps:
+    - { text: "Check the app's device settings select the correct mic/speaker/camera." }
+    - { text: "Verify OS privacy permissions for microphone/camera are granted to the app." }
+    - { text: "Restart the app and rejoin the meeting." }
+
+- id: KB-0016
+  title: Account appears disabled
+  category: account_lockout
+  symptoms: ["account disabled", "your account has been disabled", "cannot sign in disabled"]
+  applies_to: ["corporate account"]
+  risk_level: medium
+  required_tools: ["check_account_status"]
+  steps:
+    - { text: "Check the account status.", requires_tool: check_account_status }
+    - { text: "A disabled account often indicates an HR/offboarding hold escalate to identity rather than re-enabling automatically." }
